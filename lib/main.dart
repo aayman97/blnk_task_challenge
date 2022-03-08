@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:blnk_task_challenge/api/users_sheets_api.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_sign_in/google_sign_in.dart' as googleSignIn;
 import 'package:blnk_task_challenge/auth/SecureStorage.dart';
@@ -13,6 +14,7 @@ import 'auth/GoogleDrive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 Future main() async {
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   WidgetsFlutterBinding.ensureInitialized();
   await UserSpreadSheetApi.init();
   runApp(const MyApp());
@@ -39,7 +41,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final storage = FlutterSecureStorage();
-
+  bool loading = false;
   File fileImage = File("");
   List<File> _fileImages = [];
   String _firstName = "";
@@ -230,21 +232,27 @@ class _MyHomePageState extends State<MyHomePage> {
                           _landline.length > 0 &&
                           _mobile.length > 0 &&
                           dropdownValue.length > 0) {
-                        UserSpreadSheetApi.insert(
-                                _counter!,
-                                _firstName,
-                                _lastName,
-                                _address,
-                                _landline,
-                                "+2" + _mobile,
-                                dropdownValue)
-                            .then((value) async {
+                        if (!loading) {
                           setState(() {
-                            _counter = _counter! + 1;
+                            loading = true;
                           });
-                          await storage.write(
-                              key: "counter", value: _counter.toString());
-                        });
+                          UserSpreadSheetApi.insert(
+                                  _counter!,
+                                  _firstName,
+                                  _lastName,
+                                  _address,
+                                  _landline,
+                                  "+2" + _mobile,
+                                  dropdownValue)
+                              .then((value) async {
+                            setState(() {
+                              _counter = _counter! + 1;
+                              loading = false;
+                            });
+                            await storage.write(
+                                key: "counter", value: _counter.toString());
+                          });
+                        }
                       }
                     },
                     child: Container(
@@ -257,7 +265,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20)),
                         child: Center(
-                          child: Text("Confirm data"),
+                          child: loading
+                              ? SizedBox(
+                                  height: width * 0.05,
+                                  width: width * 0.05,
+                                  child: CircularProgressIndicator())
+                              : Text("Confirm Data"),
                         )),
                   )
                 ],
