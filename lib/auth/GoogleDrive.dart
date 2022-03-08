@@ -4,6 +4,7 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'SecureStorage.dart';
 
@@ -18,7 +19,6 @@ class GoogleDrive {
   Future<http.Client> getHttpClient() async {
     //Get Credentials
     var credentials = await storage.getCredentials();
-
     if (credentials == null) {
       //Needs user authentication
       var authClient =

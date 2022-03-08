@@ -1,15 +1,20 @@
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
-
+import 'package:blnk_task_challenge/api/users_sheets_api.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:google_sign_in/google_sign_in.dart' as googleSignIn;
 import 'package:blnk_task_challenge/auth/SecureStorage.dart';
 import 'package:flutter/material.dart';
 import 'package:edge_detection/edge_detection.dart';
-
 import 'auth/GoogleDrive.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-void main() {
+Future main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await UserSpreadSheetApi.init();
   runApp(const MyApp());
 }
 
@@ -33,6 +38,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final storage = FlutterSecureStorage();
+
   File fileImage = File("");
   List<File> _fileImages = [];
   String _firstName = "";
@@ -41,6 +48,25 @@ class _MyHomePageState extends State<MyHomePage> {
   String _landline = "";
   String _mobile = "";
   String dropdownValue = 'Cairo, Egypt';
+
+  int? _counter;
+
+  Future<Map<String, dynamic>?> getCounter() async {
+    var result = await storage.readAll();
+    if (!result.isEmpty) {
+      final data = jsonDecode(jsonEncode(result));
+      _counter = int.parse(data['counter']);
+    } else {
+      _counter = 2;
+    }
+
+    // await storage.deleteAll();
+  }
+
+  @override
+  initState() {
+    getCounter();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         child: SafeArea(
           top: true,
-          bottom: false,
+          bottom: true,
           child: Container(
             width: width,
             height: height,
@@ -197,9 +223,29 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   )),
                   GestureDetector(
-                    onTap: () {
-                      print(_firstName);
-                      print(_landline);
+                    onTap: () async {
+                      if (_firstName.length > 0 &&
+                          _lastName.length > 0 &&
+                          _address.length > 0 &&
+                          _landline.length > 0 &&
+                          _mobile.length > 0 &&
+                          dropdownValue.length > 0) {
+                        UserSpreadSheetApi.insert(
+                                _counter!,
+                                _firstName,
+                                _lastName,
+                                _address,
+                                _landline,
+                                "+2" + _mobile,
+                                dropdownValue)
+                            .then((value) async {
+                          setState(() {
+                            _counter = _counter! + 1;
+                          });
+                          await storage.write(
+                              key: "counter", value: _counter.toString());
+                        });
+                      }
                     },
                     child: Container(
                         width: width * 0.4,
