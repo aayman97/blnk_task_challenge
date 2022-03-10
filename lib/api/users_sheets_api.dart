@@ -17,6 +17,9 @@ class UserSpreadSheetApi {
 ''';
   static final _spreatsheetID = '1ImSsOIPT1tB0bwHgUnTLhiK_CdmUpdki-FZdByXqfA4';
 
+  static final url =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vREcL0T4buZfJdeu08KcAHipMX4Er-qE1QjazFSV4YqdsaoD9t1PWaNIuOMtJYHx4USHfDtupGExodE/pubhtml?gid=2072572073&single=true";
+
   static final _gsheets = GSheets(_credentials);
   static Future<dynamic>? _userSheet;
   static Worksheet? _worksheet;
